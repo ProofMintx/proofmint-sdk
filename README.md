@@ -1,6 +1,15 @@
 # ProofMint SDK
 
-TypeScript SDK for verifiable credential operations on Stellar.
+Typed TypeScript client for the ProofMint contract and API.
+
+The SDK is the integration layer for web applications and third-party verifiers. It does not issue credentials by itself: credential issuance still requires an authorized Stellar wallet and the contract's authorization rules. It provides the shared types, contract read helpers, API client, and metadata hashing conventions that keep consumers consistent.
+
+## Role in ProofMint
+
+- `ProofMintContract` reads authoritative state from the Soroban contract through Stellar RPC.
+- `ProofMintApi` reads indexed credentials, issuer records, events, and public metadata.
+- Hash helpers ensure metadata sent to the API matches the hash committed on-chain.
+- The web app consumes these concepts directly today and can adopt this package as the live integration matures.
 
 ## Installation
 
@@ -69,9 +78,23 @@ const verify = await api.verifyCredential("1");
 
 ### Hashing
 
-- `buildCredentialMetadata(payload): CredentialMetadata` — adds proofmint_version and created_at
-- `hashCredentialMetadata(payload): string` — canonical SHA-256 hex digest
-- `verifyMetadataHash(payload, expectedHash): boolean` — validate hash match
+- `buildCredentialMetadata(payload): CredentialMetadata` — currently adds `proofmint_version` and a generated `created_at` value
+- `hashCredentialMetadata(payload): string` — SHA-256 hex digest of the SDK's canonicalized metadata
+- `verifyMetadataHash(payload, expectedHash): boolean` — validates a hash match
+
+The metadata hashing format is an interoperability boundary. Use the SDK helper and shared fixtures rather than implementing a second serializer in an application. The API's current prototype endpoint expects the submitted hash to match the JSON bytes it receives.
+
+## Configuration
+
+`ProofMintConfig` is explicit so the SDK can run in a browser, server, or CLI without depending on `NEXT_PUBLIC_*` globals:
+
+| Field | Purpose |
+|---|---|
+| `network` | `testnet` or `mainnet` |
+| `rpcUrl` | Stellar RPC endpoint |
+| `contractId` | Deployed ProofMint contract ID |
+| `apiUrl` | Optional ProofMint API base URL |
+| `networkPassphrase` | Stellar transaction/network passphrase |
 
 ## Development
 
@@ -80,6 +103,15 @@ npm install
 npm run build
 npm run typecheck
 ```
+
+The package currently builds and typechecks without requiring a deployed contract. RPC-backed reads require a valid contract ID and a reachable Stellar RPC endpoint.
+
+## Related Repositories
+
+- `proofmint-contracts` defines the contract ABI and authoritative credential state.
+- `proofmint-indexer` supplies the data projected behind the API.
+- `proofmint-api` serves off-chain metadata and indexed views.
+- `proofmint-web` is the reference issuer/verifier frontend.
 
 ## License
 
