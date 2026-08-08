@@ -1,47 +1,86 @@
-# StellarCrop Shared
+# ProofMint SDK
 
-Shared packages and cross-repo contracts used across StellarCrop services.
+TypeScript SDK for verifiable credential operations on Stellar.
 
-## Purpose
+## Installation
 
-This repo centralizes foundational artifacts so other repos can stay decoupled while sharing consistent definitions.
+```bash
+npm install @proofmintx/sdk
+```
 
-Current shared scope:
-- TypeScript domain types
-- Config primitives
-- Schema references and shared contracts
+## Quick Start
 
-## Local Development
+```typescript
+import { ProofMintContract, ProofMintApi, hashCredentialMetadata } from "@proofmintx/sdk";
+import { Networks } from "@stellar/stellar-sdk";
+
+const config = {
+  network: "testnet" as const,
+  rpcUrl: "https://soroban-testnet.stellar.org",
+  contractId: "C...",
+  apiUrl: "http://localhost:3001",
+  networkPassphrase: Networks.TESTNET,
+};
+
+// Contract interaction
+const contract = new ProofMintContract(config);
+
+const status = await contract.verifyCredential(1n);
+console.log(status); // "Active" | "Expired" | "Revoked" | "NotFound"
+
+const credential = await contract.getCredential(1n);
+console.log(credential?.recipient);
+
+const isIssuer = await contract.isIssuer("G...");
+
+// Metadata hashing
+const metadata = {
+  title: "Certificate of Completion",
+  course: "Blockchain Basics",
+  issued_to: "Alice",
+};
+
+const hash = hashCredentialMetadata(metadata);
+
+// API interaction
+const api = new ProofMintApi(config);
+
+await api.postMetadata(hash, metadata);
+const verify = await api.verifyCredential("1");
+```
+
+## API
+
+### `ProofMintContract`
+
+- `verifyCredential(credentialId: bigint): Promise<CredentialStatus>`
+- `getCredential(credentialId: bigint): Promise<Credential | null>`
+- `isIssuer(wallet: string): Promise<boolean>`
+- `getAdmin(): Promise<string>`
+
+### `ProofMintApi`
+
+- `getCredential(id: string): Promise<ApiCredential>`
+- `verifyCredential(id: string): Promise<ApiCredential>`
+- `getIssuer(wallet: string): Promise<IssuerInfo>`
+- `postMetadata(hash: string, metadata: object): Promise<{ok: boolean}>`
+- `batchPreview(csv: string): Promise<{rows, errors}>`
+- `getEvents(params?): Promise<{events, cursor}>`
+
+### Hashing
+
+- `buildCredentialMetadata(payload): CredentialMetadata` — adds proofmint_version and created_at
+- `hashCredentialMetadata(payload): string` — canonical SHA-256 hex digest
+- `verifyMetadataHash(payload, expectedHash): boolean` — validate hash match
+
+## Development
 
 ```bash
 npm install
 npm run build
+npm run typecheck
 ```
 
-## What Belongs Here
+## License
 
-- Types used by both `stellarcrop-web` and `stellarcrop-api`
-- Shared DTOs/event payload shapes used by `stellarcrop-indexer`
-- Constants for Stellar network and contract IDs
-- Validation schemas and serialization helpers
-
-## What Should Not Belong Here
-
-- Repo-specific business logic
-- UI components tied to web rendering
-- API route handlers
-- Indexer polling runtime code
-
-## Contribution Tracks
-
-- Formalize receipt lifecycle event types
-- Add runtime validators for cross-service payloads
-- Publish versioned package workflow
-- Add compatibility matrix docs for consuming repos
-
-## Related Repositories
-
-- `stellarcrop-web`
-- `stellarcrop-api`
-- `stellarcrop-indexer`
-- `stellarcrop-contracts`
+Apache-2.0

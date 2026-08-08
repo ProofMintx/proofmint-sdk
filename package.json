@@ -1,22 +1,41 @@
 {
-  "name": "@stellarcrop/stellar",
+  "name": "@proofmintx/sdk",
   "version": "0.1.0",
-  "private": true,
+  "description": "ProofMint TypeScript SDK for credential verification on Stellar",
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "echo \"Tests require testnet RPC; see README\" && exit 0"
   },
   "dependencies": {
+    "@stablelib/sha256": "^2.0.1",
     "@stellar/stellar-sdk": "^15.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.12.4",
     "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "stellar",
+    "credentials",
+    "verification",
+    "proofmint"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ProofMintx/proofmint-sdk"
   }
 }
